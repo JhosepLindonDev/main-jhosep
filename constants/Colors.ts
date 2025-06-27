@@ -22,5 +22,12 @@ export const Colors = {
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
-  },
+  }, electo: {
+    primary: '#FF6B6B',
+    success: '#10B981',
+    white: '#FFFFFF',
+    black: '#000000',
+    gray: '#6B7280',
+  }
 };
+  
