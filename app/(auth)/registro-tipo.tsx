@@ -10,7 +10,7 @@ export default function RegistroTipoScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => router.back()}
           style={styles.backButton}
         >
@@ -20,7 +20,7 @@ export default function RegistroTipoScreen() {
       </View>
 
       <View style={styles.content}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.card}
           onPress={() => router.push('/(auth)/registro-ciudadano')}
         >
@@ -36,7 +36,7 @@ export default function RegistroTipoScreen() {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.card, styles.cardSecondary]}
           onPress={() => router.push('/(auth)/registro-candidato-partido')}
         >

@@ -1,64 +1,165 @@
 // app/(tabs)/_layout.tsx
-import { TabBarIcon } from '@/components/navigation/TabBarIcon'; // Asegúrate de que esta ruta sea correcta
+import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Tabs } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const [userType, setUserType] = useState<'ciudadano' | 'candidato'>('ciudadano');
+  const [hasVoted, setHasVoted] = useState(false);
 
+  useEffect(() => {
+    checkUserTypeAndVoteStatus();
+    
+    // Verificar el estado cada vez que el usuario navega
+    const interval = setInterval(() => {
+      checkUserTypeAndVoteStatus();
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  const checkUserTypeAndVoteStatus = async () => {
+    try {
+      const tipoRegistro = await AsyncStorage.getItem('tipoRegistro');
+      const voted = await AsyncStorage.getItem('hasVoted');
+      
+      console.log('Tipo de usuario en tabs:', tipoRegistro);
+      console.log('Ha votado:', voted);
+      
+      if (tipoRegistro === 'candidato') {
+        setUserType('candidato');
+      } else {
+        setUserType('ciudadano');
+      }
+      
+      setHasVoted(voted === 'true');
+    } catch (error) {
+      console.error('Error checking user type:', error);
+    }
+  };
+
+  // Si es candidato, mostrar todas las pestañas
+  if (userType === 'candidato') {
+    return (
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+          headerShown: false,
+        }}>
+        
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Inicio',
+            tabBarIcon: ({ color, focused }) => (
+              <TabBarIcon name={focused ? 'home' : 'home-outline'} color={color} />
+            ),
+          }}
+        />
+
+        <Tabs.Screen
+          name="notificaciones"
+          options={{
+            title: 'Notificaciones',
+            tabBarIcon: ({ color, focused }) => (
+              <TabBarIcon name={focused ? 'notifications' : 'notifications-outline'} color={color} />
+            ),
+          }}
+        />
+
+        <Tabs.Screen
+          name="estadisticas"
+          options={{
+            title: 'Estadísticas',
+            tabBarIcon: ({ color, focused }) => (
+              <TabBarIcon name={focused ? 'bar-chart' : 'bar-chart-outline'} color={color} />
+            ),
+          }}
+        />
+
+        <Tabs.Screen
+          name="explore"
+          options={{
+            title: 'Explorar',
+            tabBarIcon: ({ color, focused }) => (
+              <TabBarIcon name={focused ? 'search' : 'search-outline'} color={color} />
+            ),
+          }}
+        />
+
+        <Tabs.Screen
+          name="perfil-candidato"
+          options={{
+            href: null,
+          }}
+        />
+      </Tabs>
+    );
+  }
+
+  // Si es ciudadano, mostrar pestañas limitadas
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false, // Oculta los encabezados predeterminados de las pestañas
-        tabBarStyle: {
-            height: 60, // Ajusta la altura de la barra de pestañas si es necesario
-            paddingBottom: 5, // Un poco de padding en la parte inferior para los iconos
-        },
-        tabBarLabelStyle: {
-            fontSize: 12, // Tamaño de la fuente de las etiquetas
-            fontWeight: 'bold',
-        }
+        headerShown: false,
       }}>
+      
+      {/* Home - Siempre visible */}
       <Tabs.Screen
-        name="index" // Corresponde a app/(tabs)/index.tsx (Dashboard del Candidato)
+        name="index"
         options={{
-          title: 'Inicio', // Título que se muestra en la pestaña
+          title: 'Inicio',
           tabBarIcon: ({ color, focused }) => (
-            // Usando TabBarIcon de la plantilla de Expo con iconos de Ionicons
             <TabBarIcon name={focused ? 'home' : 'home-outline'} color={color} />
           ),
         }}
       />
-      {/* Nueva pestaña para Notificaciones */}
+
+      {/* Notificaciones - Siempre visible */}
       <Tabs.Screen
-        name="notificaciones" // **CAMBIO AQUÍ: apunta a notificaciones.tsx**
+        name="notificaciones"
         options={{
-          title: 'Notificaciones', // Nuevo título de la pestaña
+          title: 'Notificaciones',
           tabBarIcon: ({ color, focused }) => (
-            // Icono de campana para notificaciones
             <TabBarIcon name={focused ? 'notifications' : 'notifications-outline'} color={color} />
           ),
         }}
       />
+
+      {/* Estadísticas - Solo visible después de votar */}
       <Tabs.Screen
-        name="perfil-candidato" // Corresponde a app/(tabs)/perfil-candidato.tsx
-        options={{
-          title: 'Perfil',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'person' : 'person-outline'} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="estadisticas" // Corresponde a app/(tabs)/estadisticas.tsx
+        name="estadisticas"
         options={{
           title: 'Estadísticas',
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon name={focused ? 'bar-chart' : 'bar-chart-outline'} color={color} />
           ),
+          href: hasVoted ? '/(tabs)/estadisticas' : null,
+        }}
+      />
+
+      {/* Explorar - Solo visible después de votar */}
+      <Tabs.Screen
+        name="explore"
+        options={{
+          title: 'Candidatos',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'people' : 'people-outline'} color={color} />
+          ),
+          href: hasVoted ? '/(tabs)/explore' : null,
+        }}
+      />
+
+      {/* Perfil candidato - Siempre oculto del tab bar */}
+      <Tabs.Screen
+        name="perfil-candidato"
+        options={{
+          href: null,
         }}
       />
     </Tabs>

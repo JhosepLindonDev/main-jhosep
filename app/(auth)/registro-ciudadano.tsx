@@ -1,5 +1,6 @@
 // app/(auth)/registro-ciudadano.tsx
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -28,35 +29,25 @@ export default function RegistroCiudadanoScreen() {
     setFormData({ ...formData, [field]: value });
   };
 
-  const handleSubmit = async () => {
+  // La función handleSubmit ha sido agregada aquí
+  const handleSubmit = () => {
     // Validación básica
     if (!formData.dni || !formData.nombre || !formData.edad || !formData.telefono || !formData.direccion) {
       Alert.alert('Error', 'Por favor completa todos los campos');
       return;
     }
 
-    try {
-      // Guardar tipo de usuario
-      await AsyncStorage.setItem('tipoRegistro', 'ciudadano');
-      
-      // Aquí iría la lógica de registro con el backend
-      Alert.alert(
-        'Registro Exitoso',
-        'Tu registro como ciudadano ha sido completado correctamente.',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              // Por ahora, navegamos a las tabs
-              // Cuando implementes el backend, aquí guardarías el token
-              router.replace('/(tabs)');
-            },
-          },
-        ]
-      );
-    } catch (error) {
-      Alert.alert('Error', 'No se pudo completar el registro');
-    }
+    // Guardar tipo de usuario usando promesas (sin async/await en la función)
+    AsyncStorage.setItem('tipoRegistro', 'ciudadano')
+      .then(() => {
+        console.log('Tipo de usuario guardado exitosamente');
+        // Navegar directamente a tabs después de guardar
+        router.replace('/(tabs)');
+      })
+      .catch((error) => {
+        console.error('Error detallado:', error);
+        Alert.alert('Error', `No se pudo guardar el tipo de usuario. Detalles: ${error.message || error}`);
+      });
   };
 
   return (
@@ -130,7 +121,10 @@ export default function RegistroCiudadanoScreen() {
             />
           </View>
 
-          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+          <TouchableOpacity
+            style={styles.submitButton}
+            onPress={handleSubmit} // Ahora el botón llama a la función handleSubmit
+          >
             <Text style={styles.submitButtonText}>REGISTRAR CIUDADANO</Text>
           </TouchableOpacity>
 
