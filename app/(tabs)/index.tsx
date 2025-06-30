@@ -25,6 +25,8 @@ const CiudadanoHomeScreen = () => {
       partido: 'Peru Primero',
       foto: '👤',
       propuesta: 'Reforma del sistema de salud y educación',
+      porcentaje: 43,
+      votos: 4300000,
     },
     {
       id: '2',
@@ -32,6 +34,8 @@ const CiudadanoHomeScreen = () => {
       partido: 'Peru Libre',
       foto: '👩',
       propuesta: 'Seguridad ciudadana y desarrollo económico',
+      porcentaje: 13,
+      votos: 1300000,
     },
     {
       id: '3',
@@ -39,6 +43,26 @@ const CiudadanoHomeScreen = () => {
       partido: 'Partido Morado',
       foto: '👨',
       propuesta: 'Lucha contra la corrupción',
+      porcentaje: 8,
+      votos: 800000,
+    },
+    {
+      id: '4',
+      nombre: 'Verónika Mendoza',
+      partido: 'Renovación Popular',
+      foto: '👩‍💼',
+      propuesta: 'Derechos sociales y medio ambiente',
+      porcentaje: 7.9,
+      votos: 790000,
+    },
+    {
+      id: '5',
+      nombre: 'César Acuña',
+      partido: 'Alianza para el Progreso',
+      foto: '👨‍💼',
+      propuesta: 'Educación y emprendimiento',
+      porcentaje: 7,
+      votos: 700000,
     },
   ];
 
@@ -74,38 +98,119 @@ const CiudadanoHomeScreen = () => {
             await AsyncStorage.setItem('votedFor', candidatoId);
             setHasVoted(true);
             setSelectedCandidate(candidatoId);
-            Alert.alert('Éxito', 'Tu voto ha sido registrado');
+            Alert.alert('Voto Registrado', 'Tu voto ha sido registrado exitosamente.');
           },
         },
       ]
     );
   };
 
+  const handleVerCandidato = (candidato: any) => {
+    // Navegar al perfil del candidato con sus datos
+    router.push({
+      pathname: '/(tabs)/perfil-candidato',
+      params: {
+        id: candidato.id,
+        nombre: candidato.nombre,
+        partido: candidato.partido,
+        porcentaje: candidato.porcentaje.toString(),
+      },
+    });
+  };
+
+  // Si ya votó, mostrar estadísticas con botones "ver"
   if (hasVoted) {
     const votedCandidate = candidatos.find(c => c.id === selectedCandidate);
+    const totalVotos = candidatos.reduce((sum, c) => sum + c.votos, 0);
+
     return (
       <ScrollView style={styles.container}>
+        {/* Header de estadísticas */}
         <View style={styles.header}>
-          <Text style={styles.title}>Ya has votado</Text>
+          <Text style={styles.title}>Resultados Electorales</Text>
+          <Text style={styles.subtitle}>Tu voto ha sido registrado</Text>
         </View>
-        <View style={styles.votedCard}>
-          <Ionicons name="checkmark-circle" size={80} color="#2ECC71" />
-          <Text style={styles.votedText}>Votaste por:</Text>
-          <Text style={styles.votedCandidateName}>{votedCandidate?.nombre}</Text>
+
+        {/* Card de confirmación de voto */}
+        <View style={styles.votedConfirmation}>
+          <Ionicons name="checkmark-circle" size={50} color="#2ECC71" />
+          <View style={styles.votedInfo}>
+            <Text style={styles.votedText}>Votaste por:</Text>
+            <Text style={styles.votedCandidateName}>{votedCandidate?.nombre}</Text>
+          </View>
         </View>
-        <View style={styles.optionsContainer}>
-          <TouchableOpacity 
-            style={styles.optionButton}
-            onPress={() => router.push('/(tabs)/estadisticas')}
-          >
-            <Ionicons name="bar-chart" size={40} color="#3498DB" />
-            <Text style={styles.optionTitle}>Ver Estadísticas</Text>
-          </TouchableOpacity>
+
+        {/* Resumen General */}
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryNumber}>{totalVotos.toLocaleString()}</Text>
+            <Text style={styles.summaryLabel}>Total de votos</Text>
+          </View>
+          <View style={styles.summaryDivider} />
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryNumber}>65%</Text>
+            <Text style={styles.summaryLabel}>Participación</Text>
+          </View>
         </View>
+
+        {/* Lista de candidatos con estadísticas */}
+        <View style={styles.statsContainer}>
+          <Text style={styles.statsTitle}>Resultados por Candidato</Text>
+          
+          {candidatos.map((candidato) => (
+            <View key={candidato.id} style={styles.candidatoStatCard}>
+              <View style={styles.candidatoStatInfo}>
+                <View style={styles.candidatoHeader}>
+                  <Text style={styles.candidatoFoto}>{candidato.foto}</Text>
+                  <View style={styles.candidatoDetails}>
+                    <Text style={styles.candidatoNombre}>{candidato.nombre}</Text>
+                    <Text style={styles.candidatoPartido}>{candidato.partido}</Text>
+                  </View>
+                </View>
+                
+                {/* Barra de progreso */}
+                <View style={styles.progressBarContainer}>
+                  <View 
+                    style={[
+                      styles.progressBar, 
+                      { width: `${candidato.porcentaje}%` }
+                    ]} 
+                  />
+                  <Text style={styles.porcentajeText}>{candidato.porcentaje}%</Text>
+                </View>
+                
+                <Text style={styles.votosText}>{candidato.votos.toLocaleString()} votos</Text>
+              </View>
+              
+              {/* Botón Ver */}
+              <TouchableOpacity 
+                style={styles.verButton}
+                onPress={() => handleVerCandidato(candidato)}
+              >
+                <Text style={styles.verButtonText}>VER</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+
+        {/* Botón para votar de nuevo (solo para pruebas) */}
+        <TouchableOpacity 
+          style={styles.resetButton}
+          onPress={async () => {
+            await AsyncStorage.removeItem('hasVoted');
+            await AsyncStorage.removeItem('votedFor');
+            setHasVoted(false);
+            setSelectedCandidate(null);
+          }}
+        >
+          <Ionicons name="refresh" size={20} color="white" />
+          <Text style={styles.resetButtonText}>Votar de Nuevo (Pruebas)</Text>
+        </TouchableOpacity>
       </ScrollView>
     );
   }
 
+  // Si no ha votado, mostrar papeleta
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -189,9 +294,8 @@ export default function HomeScreen() {
 
   const checkUserType = async () => {
     try {
-      // Aquí deberías obtener el tipo de usuario del AuthContext o AsyncStorage
-      // Por ahora, vamos a verificar si se registró como candidato
       const registroTipo = await AsyncStorage.getItem('tipoRegistro');
+      console.log('Tipo de usuario:', registroTipo);
       
       if (registroTipo === 'candidato') {
         setUserType('candidato');
@@ -200,7 +304,7 @@ export default function HomeScreen() {
       }
     } catch (error) {
       console.error('Error:', error);
-      setUserType('ciudadano'); // Default
+      setUserType('ciudadano');
     } finally {
       setLoading(false);
     }
@@ -293,38 +397,163 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
-  votedCard: {
-    backgroundColor: 'white',
-    margin: 20,
-    borderRadius: 20,
-    padding: 30,
+  // Estilos para estadísticas integradas
+  votedConfirmation: {
+    backgroundColor: '#E8F8F5',
+    marginHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 15,
+    padding: 15,
+    flexDirection: 'row',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#2ECC71',
+  },
+  votedInfo: {
+    marginLeft: 15,
+    flex: 1,
   },
   votedText: {
     fontSize: 18,
     color: '#666',
-    marginTop: 20,
+    marginTop: 0,
   },
   votedCandidateName: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
-    marginTop: 10,
+    marginTop: 5,
   },
-  optionsContainer: {
-    padding: 20,
-  },
-  optionButton: {
+  summaryCard: {
     backgroundColor: 'white',
+    margin: 20,
     borderRadius: 15,
     padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  summaryItem: {
     alignItems: 'center',
   },
-  optionTitle: {
+  summaryNumber: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#3498DB',
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 5,
+  },
+  summaryDivider: {
+    width: 1,
+    height: 50,
+    backgroundColor: '#E0E0E0',
+  },
+  statsContainer: {
+    paddingHorizontal: 20,
+  },
+  statsTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 15,
+  },
+  candidatoStatCard: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 15,
+    marginBottom: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  candidatoStatInfo: {
+    flex: 1,
+  },
+  candidatoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  candidatoFoto: {
+    fontSize: 35,
+    marginRight: 10,
+  },
+  candidatoDetails: {
+    flex: 1,
+  },
+  candidatoNombre: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
-    marginTop: 10,
+  },
+  candidatoPartido: {
+    fontSize: 14,
+    color: '#666',
+  },
+  progressBarContainer: {
+    height: 25,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 5,
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#3498DB',
+    borderRadius: 12,
+  },
+  porcentajeText: {
+    position: 'absolute',
+    right: 10,
+    top: 3,
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  votosText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  verButton: {
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+    marginLeft: 10,
+  },
+  verButtonText: {
+    color: '#4CAF50',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  resetButton: {
+    backgroundColor: '#E74C3C',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    margin: 20,
+    borderRadius: 25,
+  },
+  resetButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 10,
   },
   // Estilos para candidatos
   dashboardContainer: {
